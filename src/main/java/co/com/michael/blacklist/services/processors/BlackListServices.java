@@ -1,9 +1,9 @@
 package co.com.michael.blacklist.services.processors;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.text.similarity.LevenshteinDistance;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StopWatch;
 
@@ -17,15 +17,10 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class BlackListServices {
 
-	private LevenshteinDistance levenshteinDistance;
-
-	private List<BlackList> chains;
+	@Autowired
 	private IBlackListRepository repository;
 
-	public BlackListServices(IBlackListRepository repository) {
-		this.repository = repository;
-		this.chains = new ArrayList<>();
-	}
+	private List<BlackList> chains;
 
 	/**
 	 * Carga las cadenas desde el repositorio al iniciar el servicio.
@@ -82,6 +77,7 @@ public class BlackListServices {
 			}
 		} catch (Exception e) {
 			log.error("(isValidateChain) Exception: ", e.getMessage(), e);
+			throw new InternalServerException(e.getMessage());
 		} finally {
 			watch.stop();
 			log.debug("(isValidateChain) La validación de la cadena tomó: {} milisegundos", watch.getTotalTimeMillis());
@@ -116,15 +112,11 @@ public class BlackListServices {
 			log.debug("(validateChains) allowedDistance: {}", allowedDistance);
 
 			// Calcula la distancia entre las cadenas usando el algoritmo de Levenshtein
+			LevenshteinDistance levenshteinDistance = new LevenshteinDistance();
 			int editDistance = levenshteinDistance.apply(chain.toLowerCase(), chain2.toLowerCase());
 
 			// Comprueba si la distancia de edición es menor que la distancia permitida
-			boolean isDistanceWithinThreshold = editDistance < allowedDistance;
-			log.debug(
-					"(validateChains) Validado por distancia {}, la palabra tiene una distancia de {}, distancia permitida {}",
-					isDistanceWithinThreshold, allowedDistance, editDistance);
-
-			return !isDistanceWithinThreshold;
+			return editDistance <= allowedDistance;
 		} catch (Exception e) {
 			throw new InternalServerException("Error durante la validación: " + e.getMessage());
 		} finally {
