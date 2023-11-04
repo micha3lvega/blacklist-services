@@ -1,4 +1,4 @@
-package co.com.michael.blacklist.services;
+package co.com.michael.blacklist.services.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 

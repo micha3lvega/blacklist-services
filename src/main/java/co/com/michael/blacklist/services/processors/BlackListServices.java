@@ -7,10 +7,10 @@ import org.apache.commons.text.similarity.LevenshteinDistance;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StopWatch;
 
-import co.com.michael.blacklist.services.IBlackListRepository;
 import co.com.michael.blacklist.services.exception.InternalServerException;
 import co.com.michael.blacklist.services.exception.NotFoundException;
 import co.com.michael.blacklist.services.model.dao.BlackList;
+import co.com.michael.blacklist.services.repository.IBlackListRepository;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
