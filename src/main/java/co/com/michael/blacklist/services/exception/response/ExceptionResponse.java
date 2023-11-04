@@ -23,4 +23,9 @@ public class ExceptionResponse implements Serializable {
 	private String requestURL;
 	private HttpStatus responseCode;
 
+	public ExceptionResponse(String message) {
+		this.date = new Date();
+		this.message = message;
+	}
+
 }
