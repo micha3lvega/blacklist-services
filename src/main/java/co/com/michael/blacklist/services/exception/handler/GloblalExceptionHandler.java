@@ -5,16 +5,18 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import co.com.michael.blacklist.services.exception.InternalServerException;
 import co.com.michael.blacklist.services.exception.response.ExceptionResponse;
-import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @ControllerAdvice
 public class GloblalExceptionHandler {
 
-	@ExceptionHandler(Exception.class)
-	public ExceptionResponse exceptionHandler(InternalServerException exception, HttpServletRequest request) {
+	@ExceptionHandler(InternalServerException.class)
+	public ExceptionResponse exceptionHandler(InternalServerException exception) {
 
-		return ExceptionResponse.builder().requestURL(request.getRequestURL().toString())
-				.message(exception.getMessage()).build();
+		log.error("InternalServerException: {}", exception);
+		return ExceptionResponse.builder().message(exception.getMessage()).build();
+
 	}
 
 }

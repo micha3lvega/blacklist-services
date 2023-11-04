@@ -18,14 +18,10 @@ public class ExceptionResponse implements Serializable {
 
 	private static final long serialVersionUID = 1072844002741472252L;
 
-	private Date date;
 	private String message;
-	private String requestURL;
 	private HttpStatus responseCode;
 
-	public ExceptionResponse(String message) {
-		this.date = new Date();
-		this.message = message;
-	}
+	@Builder.Default
+	private Date date = new Date();
 
 }
