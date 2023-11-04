@@ -111,12 +111,6 @@ public class BlackListServices {
 				return false;
 			}
 
-			// Verifica si la nueva contraseña contiene la palabra prohibida (key)
-			if (newpass.toLowerCase().contains(key.toLowerCase())) {
-				log.trace("(isValidateChain) La clave contiene una palabra prohibida: {}", key);
-				return false;
-			}
-
 			// Calcula la distancia permitida para la comparación de cadenas
 			int allowedDistance = chain.length() / 2;
 			log.debug("(validateChains) allowedDistance: {}", allowedDistance);
