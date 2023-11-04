@@ -2,6 +2,7 @@ package co.com.michael.blacklist.services.exception.handler;
 
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.webjars.NotFoundException;
 
 import co.com.michael.blacklist.services.exception.InternalServerException;
 import co.com.michael.blacklist.services.exception.response.ExceptionResponse;
@@ -19,4 +20,11 @@ public class GloblalExceptionHandler {
 
 	}
 
+	@ExceptionHandler(NotFoundException.class)
+	public ExceptionResponse notFoundExceptionExceptionHandler(NotFoundException exception) {
+
+		log.error("NotFoundException: {}", exception);
+		return ExceptionResponse.builder().message(exception.getMessage()).build();
+
+	}
 }
