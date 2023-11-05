@@ -4,10 +4,12 @@ import java.util.List;
 
 import org.apache.commons.text.similarity.LevenshteinDistance;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StopWatch;
 
 import co.com.michael.blacklist.services.exception.InternalServerException;
+import co.com.michael.blacklist.services.exception.InvalidStringException;
 import co.com.michael.blacklist.services.exception.NotFoundException;
 import co.com.michael.blacklist.services.model.dao.BlackList;
 import co.com.michael.blacklist.services.repository.IBlackListRepository;
@@ -20,6 +22,9 @@ public class BlackListServices {
 	@Autowired
 	private IBlackListRepository repository;
 
+	@Value("${strictness.level.algorithm:4}")
+	private Integer strictnessLevel;
+
 	private List<BlackList> chains;
 
 	/**
@@ -28,7 +33,7 @@ public class BlackListServices {
 	public void load() {
 
 		if (this.chains == null || this.chains.isEmpty()) {
-			log.debug("Inicia la carga de las cadenas");
+			log.trace("Inicia la carga de las cadenas");
 
 			StopWatch stopWatch = new StopWatch();
 			stopWatch.start();
@@ -37,10 +42,10 @@ public class BlackListServices {
 
 			stopWatch.stop();
 
-			log.debug("La carga de las cadenas termino, se cargaron {} cadenas en: {} milisegundos", this.chains.size(),
+			log.trace("La carga de las cadenas termino, se cargaron {} cadenas en: {} milisegundos", this.chains.size(),
 					stopWatch.getTotalTimeMillis());
 		} else {
-			log.debug("No se cargo ninguna cadena ya existen {} registros en memoria", this.chains.size());
+			log.trace("No se cargo ninguna cadena ya existen {} registros en memoria", this.chains.size());
 		}
 
 	}
@@ -63,24 +68,21 @@ public class BlackListServices {
 	 * @return true si la cadena es válida, false si no lo es.
 	 */
 	public boolean isValidChain(String chain) {
-		log.debug("(isValidateChain) Inicia la validación de la cadena {}", chain);
+		log.trace("(isValidateChain) Inicia la validación de la cadena {}", chain);
 
 		StopWatch watch = new StopWatch();
 		watch.start();
 
 		try {
 			for (BlackList BlackList : getChains()) {
-				if (!compareChains(chain, BlackList.getChain())) {
-					log.error("(isValidateChain) La cadena {} es similar a: {}", chain, BlackList.getChain());
-					return false;
+				if (compareChains(chain, BlackList.getChain())) {
+					log.trace("(isValidateChain) La cadena {} es similar a: {}", chain, BlackList.getChain());
+					throw new InvalidStringException(BlackList.getChain());
 				}
 			}
-		} catch (Exception e) {
-			log.error("(isValidateChain) Exception: ", e.getMessage(), e);
-			throw new InternalServerException(e.getMessage());
 		} finally {
 			watch.stop();
-			log.debug("(isValidateChain) La validación de la cadena tomó: {} milisegundos", watch.getTotalTimeMillis());
+			log.trace("(isValidateChain) La validación de la cadena tomó: {} milisegundos", watch.getTotalTimeMillis());
 		}
 		return true;
 	}
@@ -97,19 +99,16 @@ public class BlackListServices {
 	 *                                 validación.
 	 */
 	public boolean compareChains(String chain, String chain2) {
-		StopWatch watch = new StopWatch();
-		watch.start();
 
 		try {
 			// Verifica si las cadenas son nulas o vacías
 			if (chain == null || chain.isEmpty() || chain2 == null || chain2.isEmpty()) {
-				log.debug("(validateChains) Una de las cadenas es nula o vacía");
+				log.trace("(validateChains) Una de las cadenas es nula o vacía");
 				return false;
 			}
 
 			// Calcula la distancia permitida para la comparación de cadenas
-			int allowedDistance = chain.length() / 2;
-			log.debug("(validateChains) allowedDistance: {}", allowedDistance);
+			int allowedDistance = Math.max(chain.length() / 2, strictnessLevel);
 
 			// Calcula la distancia entre las cadenas usando el algoritmo de Levenshtein
 			LevenshteinDistance levenshteinDistance = new LevenshteinDistance();
@@ -119,9 +118,6 @@ public class BlackListServices {
 			return editDistance <= allowedDistance;
 		} catch (Exception e) {
 			throw new InternalServerException("Error durante la validación: " + e.getMessage());
-		} finally {
-			watch.stop();
-			log.debug("(validateChains) La validación de cadenas tardó: {} nanosegundos", watch.getTotalTimeNanos());
 		}
 	}
 
